@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "redmine-parse"
+version = "0.1.0"
+description = "CLI tool to interact with Redmine — list projects, issues, and manage tickets"
+requires-python = ">=3.9"
+dependencies = [
+    "click>=8.0",
+    "python-redmine>=2.4",
+]
+
+[project.scripts]
+redmine = "redmine_parse.cli:main"
