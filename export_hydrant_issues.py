@@ -4,6 +4,7 @@ Incremental by default: only appends new issues not already in the sheet.
 Use --full to regenerate the entire sheet from scratch.
 """
 import argparse
+import json
 import os
 import re
 import sys
@@ -15,8 +16,23 @@ from redmine_parse.client import RedmineClient
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-REDMINE_URL = os.environ.get("REDMINE_URL", "https://redmine.sercomm.co.jp")
-REDMINE_API_KEY = os.environ["REDMINE_API_KEY"]
+def _load_config():
+    candidates = [
+        os.path.join(os.path.dirname(__file__), "config.json"),
+        "config.json",
+    ]
+    for path in candidates:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                pass
+    return {}
+
+_config = _load_config()
+REDMINE_URL = os.environ.get("REDMINE_URL") or _config.get("REDMINE_URL") or "https://redmine.sercomm.co.jp"
+REDMINE_API_KEY = os.environ.get("REDMINE_API_KEY") or _config.get("REDMINE_API_KEY") or ""
 PROJECT_ID = 141
 
 OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "HYDRANT_Field_Issues.xlsx")

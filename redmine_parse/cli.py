@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from pathlib import Path
 
 import click
 
@@ -9,14 +10,30 @@ from .client import RedmineClient, RedmineClientError
 DEFAULT_URL = "https://redmine.sercomm.co.jp"
 
 
+def _load_config():
+    candidates = [
+        Path("config.json"),
+        Path(__file__).parent.parent / "config.json",
+    ]
+    for path in candidates:
+        if path.exists():
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, OSError):
+                pass
+    return {}
+
+
 def _get_client(url: str, key: str) -> RedmineClient:
-    url = url or os.environ.get("REDMINE_URL", DEFAULT_URL)
-    key = key or os.environ.get("REDMINE_API_KEY", "")
+    config = _load_config()
+    url = url or os.environ.get("REDMINE_URL") or config.get("REDMINE_URL") or DEFAULT_URL
+    key = key or os.environ.get("REDMINE_API_KEY") or config.get("REDMINE_API_KEY") or ""
 
     if not key:
         raise click.UsageError(
-            "API key is required. Set REDMINE_API_KEY environment variable "
-            "or pass --key."
+            "API key is required. Set REDMINE_API_KEY in config.json, "
+            "environment variable, or pass --key."
         )
 
     try:
